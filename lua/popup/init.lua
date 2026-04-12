@@ -6,8 +6,8 @@ local M = {}
 
 ---@class MatchDecl
 ---@field firstc? string
----@field pattern? string
----@field prompt? string
+---@field pattern? string|string[]
+---@field prompt? string|string[]
 
 ---@class RouteDecl
 ---@field match MatchDecl
@@ -43,7 +43,7 @@ local POPUP_OPT_DEFAULT = {
             relative = 'editor',
         },
         lsp_rename = {
-            width = 0.35,
+            width = 20,
             col = 1,
             row = 1,
             relative = 'cursor',
@@ -82,7 +82,13 @@ local POPUP_OPT_DEFAULT = {
             view = 'cmdline',
         },
         {
-            match = { firstc = ':', pattern = '%s*%!' },
+            match = {
+                firstc = ':',
+                pattern = {
+                    '%s+%!',
+                    '^%!',
+                },
+            },
             prefix = '$',
             title = 'Filter',
             hl = 'CmdlineFilter',
@@ -126,14 +132,18 @@ local POPUP_WIN_OPT_DEFAULT = {
     row = 0.12,
     relative = 'editor',
     border = 'rounded',
-    focus_on_open = not NeedCursorHack,
-    focusable = not NeedCursorHack,
+    focus_on_open = false,
+    focusable = false,
     zindex = 400,
     wo = {
         number = false,
         wrap = false,
         sidescrolloff = SIDESCROLLOFF,
         virtualedit = 'onemore',
+        relativenumber = false,
+        foldcolumn = '0',
+        signcolumn = 'no',
+        statuscolumn = ' ',
     },
 }
 
@@ -258,8 +268,6 @@ local function redraw_ui(level)
             )
             vim.cmd 'redraw!'
         else
-            pcall(vim.api.nvim_set_current_win, win.win)
-
             -- calculate cursor offset
             local real_col = vim.api.nvim_strwidth(stat.route.prefix)
                 + 1
@@ -280,16 +288,33 @@ function M.on_cmdline_show(content, pos, firstc, prompt, indent, level)
         raw_content = raw_content .. chunk[2]
     end
     local route
+    ---@param pat string|string[]
+    ---@param str string
+    ---@return boolean
+    local function try_match_patterns(pat, str)
+        if type(pat) == 'string' then
+            return str:match(pat) ~= nil
+        elseif vim.isarray(pat) then
+            for _, p in ipairs(pat) do
+                if str:match(p) then
+                    return true
+                end
+            end
+        end
+        return false
+    end
     for _, r in ipairs(Opt.routes) do
         local is_match = true
         local match = r.match
         if match.firstc and match.firstc ~= firstc then
             is_match = false
         end
-        if match.pattern and not raw_content:match(match.pattern) then
+        if
+            match.pattern and not try_match_patterns(match.pattern, raw_content)
+        then
             is_match = false
         end
-        if match.prompt and not prompt:match(match.prompt) then
+        if match.prompt and not try_match_patterns(match.prompt, prompt) then
             is_match = false
         end
         if is_match then
