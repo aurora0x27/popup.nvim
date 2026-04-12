@@ -1,7 +1,7 @@
 --------------------------------------------------------------------------------
 -- Cmdline and InputBox
 --------------------------------------------------------------------------------
-local Win = require 'ui.window'
+local Win = require 'popup.window'
 local M = {}
 
 ---@class MatchDecl
