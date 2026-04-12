@@ -172,9 +172,9 @@ end
 
 local function show_cursor()
     if old_guicursor then
-        if not vim.v.exiting ~= vim.NIL then
+        if vim.v.exiting == 0 then
             vim.schedule(function()
-                if old_guicursor and not vim.v.exiting ~= vim.NIL then
+                if old_guicursor and vim.v.exiting == 0 then
                     -- we need to reset all first and then wait for some time before resetting the guicursor. See #114
                     vim.go.guicursor = 'a:'
                     vim.cmd.redrawstatus()
@@ -199,7 +199,7 @@ function M.on_cmdline_hide(level, _)
     if stat and stat.win:is_valid() then
         stat.win:close()
     end
-    stat = nil
+    StatStack[level] = nil
     if last() and NeedCursorHack then
         show_cursor()
     end
