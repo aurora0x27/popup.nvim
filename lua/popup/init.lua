@@ -24,11 +24,13 @@ local M = {}
 ---@field relative 'editor'|'cursor'
 
 ---@class PopupOpt
+---@field enable_ui2? boolean
 ---@field views? table<string, PopupWinOpt>
 ---@field routes? RouteDecl[]
 
 ---@type PopupOpt
 local POPUP_OPT_DEFAULT = {
+    enable_ui2 = false,
     views = {
         cmdline = {
             width = 0.35,
@@ -423,13 +425,20 @@ end
 ---@param opts PopupOpt|nil
 function M.setup(opts)
     Opt = vim.tbl_deep_extend('force', POPUP_OPT_DEFAULT, opts or {})
-    local ns = vim.api.nvim_create_namespace 'PopupUI'
-    vim.ui_attach(ns, { ext_cmdline = true }, function(event, ...)
-        local callee = M['on_' .. event]
-        if type(callee) == 'function' then
-            callee(...)
-        end
-    end)
+    if Opt.enable_ui2 then
+        local ui2 = require 'vim._core.ui2'
+        ui2.cmd.cmdline_show = M.on_cmdline_show
+        ui2.cmd.cmdline_hide = M.on_cmdline_hide
+        ui2.cmd.cmdline_pos = M.on_cmdline_pos
+    else
+        local ns = vim.api.nvim_create_namespace 'PopupUI'
+        vim.ui_attach(ns, { ext_cmdline = true }, function(event, ...)
+            local callee = M['on_' .. event]
+            if type(callee) == 'function' then
+                callee(...)
+            end
+        end)
+    end
     local highlights = {
         CmdlineDefault = { link = 'MiniIconsCyan' },
         CmdlineLua = { link = 'MiniIconsBlue' },
