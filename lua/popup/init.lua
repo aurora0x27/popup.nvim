@@ -368,8 +368,8 @@ function M.on_cmdline_show(content, pos, firstc, prompt, indent, level)
         end
         if stat.origin_pos then
             winopt.col = stat.origin_pos.col
-            winopt.row = stat.origin_pos.row + 1
-            winopt.relative = 'editor'
+            winopt.row = stat.origin_pos.row
+            winopt.relative = 'win'
         end
         stat.win:update(winopt)
         stat.win:set_title(win_title)
