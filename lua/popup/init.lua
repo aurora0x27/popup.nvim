@@ -232,7 +232,8 @@ local function redraw_marks(bufnr, prefix, hl, pos, content)
 
     vim.api.nvim_buf_set_extmark(bufnr, ns_id, 0, 0, {
         virt_text = { { prefix .. ' ', hl } },
-        virt_text_pos = NeedCursorHack and 'inline' or 'overlay',
+        virt_text_pos = 'inline',
+        right_gravity = false,
         priority = 100,
     })
 
@@ -273,16 +274,13 @@ local function redraw_ui(level)
             )
             vim.cmd 'redraw!'
         else
-            -- calculate cursor offset
-            local real_col = vim.api.nvim_strwidth(stat.route.prefix)
-                + 1
-                + stat.pos
-            pcall(vim.api.nvim_win_set_cursor, win.win, { 1, real_col })
-
-            pcall(
-                vim.api.nvim__redraw,
-                { cursor = true, flush = true, win = win.win }
-            )
+            vim.schedule(function()
+                pcall(vim.api.nvim_win_set_cursor, win.win, { 1, stat.pos })
+                pcall(
+                    vim.api.nvim__redraw,
+                    { cursor = true, flush = true, win = win.win }
+                )
+            end)
         end
     end
 end
@@ -359,16 +357,7 @@ function M.on_cmdline_show(content, pos, firstc, prompt, indent, level)
     }
     if stat and stat.win:is_valid() then
         -- already open
-        if NeedCursorHack then
-            -- use extmark to draw prefix
-            stat.win:set_lines { raw_content }
-        else
-            -- write prefix into buffer and use extmark to highlight
-            stat.win:set_lines {
-                string.rep(' ', vim.api.nvim_strwidth(route.prefix) + 1)
-                    .. raw_content,
-            }
-        end
+        stat.win:set_lines { raw_content }
         if stat.origin_pos then
             winopt.col = stat.origin_pos.col
             winopt.row = stat.origin_pos.row
@@ -386,15 +375,7 @@ function M.on_cmdline_show(content, pos, firstc, prompt, indent, level)
     else
         -- new window
         winopt.title = win_title
-        local new_win
-        if NeedCursorHack then
-            new_win = Win.open(winopt, { raw_content })
-        else
-            new_win = Win.open(winopt, {
-                string.rep(' ', vim.api.nvim_strwidth(route.prefix) + 1)
-                    .. raw_content,
-            })
-        end
+        local new_win = Win.open(winopt, { raw_content })
         local actual_cfg = vim.api.nvim_win_get_config(new_win.win)
         StatStack[level] = {
             indent = indent,
