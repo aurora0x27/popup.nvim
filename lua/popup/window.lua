@@ -84,7 +84,7 @@ function Win:_build_config()
         focusable = self.opts.focusable,
         zindex = self.opts.zindex,
         noautocmd = self.opts.noautocmd or false,
-        style = "minimal",
+        style = 'minimal',
     }
 
     if self.opts.title and vim.fn.has('nvim-0.9') == 1 then

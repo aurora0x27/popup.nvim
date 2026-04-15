@@ -24,12 +24,14 @@ local M = {}
 ---@field relative 'editor'|'cursor'
 
 ---@class PopupOpt
+---@field cursor_hack? boolean
 ---@field enable_ui2? boolean
 ---@field views? table<string, PopupWinOpt>
 ---@field routes? RouteDecl[]
 
 ---@type PopupOpt
 local POPUP_OPT_DEFAULT = {
+    cursor_hack = false,
     enable_ui2 = false,
     views = {
         cmdline = {
@@ -184,9 +186,9 @@ end
 
 local function show_cursor()
     if old_guicursor then
-        if vim.v.exiting == 0 then
+        if vim.v.exiting == vim.NIL then
             vim.schedule(function()
-                if old_guicursor and vim.v.exiting == 0 then
+                if old_guicursor and vim.v.exiting == vim.NIL then
                     -- we need to reset all first and then wait for some time before resetting the guicursor. See #114
                     vim.go.guicursor = 'a:'
                     vim.cmd.redrawstatus()
@@ -212,7 +214,7 @@ function M.on_cmdline_hide(level, _)
         stat.win:close()
     end
     StatStack[level] = nil
-    if last() and NeedCursorHack then
+    if not last() and NeedCursorHack then
         show_cursor()
     end
 end
@@ -229,7 +231,7 @@ local function redraw_marks(bufnr, prefix, hl, pos, content)
 
     vim.api.nvim_buf_set_extmark(bufnr, ns_id, 0, 0, {
         virt_text = { { prefix .. ' ', hl } },
-        virt_text_pos = 'overlay',
+        virt_text_pos = NeedCursorHack and 'inline' or 'overlay',
         priority = 100,
     })
 
@@ -425,6 +427,7 @@ end
 ---@param opts PopupOpt|nil
 function M.setup(opts)
     Opt = vim.tbl_deep_extend('force', POPUP_OPT_DEFAULT, opts or {})
+    NeedCursorHack = NeedCursorHack or Opt.cursor_hack == true
     if Opt.enable_ui2 then
         local ui2 = require 'vim._core.ui2'
         ui2.cmd.cmdline_show = M.on_cmdline_show
