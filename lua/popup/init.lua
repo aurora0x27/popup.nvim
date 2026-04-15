@@ -24,6 +24,7 @@ local M = {}
 ---@field relative 'editor'|'cursor'
 
 ---@class PopupOpt
+---@field no_register? boolean
 ---@field cursor_hack? boolean
 ---@field enable_ui2? boolean
 ---@field views? table<string, PopupWinOpt>
@@ -428,20 +429,6 @@ end
 function M.setup(opts)
     Opt = vim.tbl_deep_extend('force', POPUP_OPT_DEFAULT, opts or {})
     NeedCursorHack = NeedCursorHack or Opt.cursor_hack == true
-    if Opt.enable_ui2 then
-        local ui2 = require 'vim._core.ui2'
-        ui2.cmd.cmdline_show = M.on_cmdline_show
-        ui2.cmd.cmdline_hide = M.on_cmdline_hide
-        ui2.cmd.cmdline_pos = M.on_cmdline_pos
-    else
-        local ns = vim.api.nvim_create_namespace 'PopupUI'
-        vim.ui_attach(ns, { ext_cmdline = true }, function(event, ...)
-            local callee = M['on_' .. event]
-            if type(callee) == 'function' then
-                callee(...)
-            end
-        end)
-    end
     local highlights = {
         CmdlineDefault = { link = 'MiniIconsCyan' },
         CmdlineLua = { link = 'MiniIconsBlue' },
@@ -459,6 +446,25 @@ function M.setup(opts)
     }
     for name, def in pairs(highlights) do
         vim.api.nvim_set_hl(0, name, def)
+    end
+
+    if Opt.no_register then
+        return
+    end
+
+    if Opt.enable_ui2 then
+        local ui2 = require 'vim._core.ui2'
+        ui2.cmd.cmdline_show = M.on_cmdline_show
+        ui2.cmd.cmdline_hide = M.on_cmdline_hide
+        ui2.cmd.cmdline_pos = M.on_cmdline_pos
+    else
+        local ns = vim.api.nvim_create_namespace 'PopupUI'
+        vim.ui_attach(ns, { ext_cmdline = true }, function(event, ...)
+            local callee = M['on_' .. event]
+            if type(callee) == 'function' then
+                callee(...)
+            end
+        end)
     end
 end
 
