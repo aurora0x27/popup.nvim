@@ -138,7 +138,7 @@ local POPUP_WIN_OPT_DEFAULT = {
     relative = 'editor',
     border = 'rounded',
     focus_on_open = false,
-    focusable = false,
+    focusable = true,
     zindex = 400,
     wo = {
         number = false,
@@ -268,19 +268,15 @@ local function redraw_ui(level)
         )
         if NeedCursorHack then
             pcall(vim.api.nvim_win_set_cursor, win.win, { 1, stat.pos })
-            vim.api.nvim_exec_autocmds(
-                'User',
-                { pattern = 'CmdlineCustomUpdate' }
-            )
             vim.cmd 'redraw!'
         else
-            vim.schedule(function()
+            vim.api.nvim_win_call(win.win, function()
                 pcall(vim.api.nvim_win_set_cursor, win.win, { 1, stat.pos })
-                pcall(
-                    vim.api.nvim__redraw,
-                    { cursor = true, flush = true, win = win.win }
-                )
             end)
+            pcall(
+                vim.api.nvim__redraw,
+                { cursor = true, flush = true, win = win.win }
+            )
         end
     end
 end

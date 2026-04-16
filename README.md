@@ -12,6 +12,12 @@ Implement Cmdline for Nvim
     }
 ```
 
+> [!WARNING]
+>
+> Cursor position is not correctly calculated when executing preview of substitution command.
+>
+> Please `set inccommand=` to ensure the cursor is correctly drawn.
+
 ## Configuration
 
 Default options
