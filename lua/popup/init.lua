@@ -407,14 +407,14 @@ function M.setup(opts)
     Opt = vim.tbl_deep_extend('force', POPUP_OPT_DEFAULT, opts or {})
     NeedCursorHack = NeedCursorHack or Opt.cursor_hack == true
     local highlights = {
-        CmdlineDefault = { link = 'MiniIconsCyan' },
-        CmdlineLua = { link = 'MiniIconsBlue' },
-        CmdlineHelp = { link = 'MiniIconsGreen' },
-        CmdlineSearchUp = { link = 'MiniIconsOrange' },
-        CmdlineSearchDown = { link = 'MiniIconsYellow' },
-        CmdlineFilter = { link = 'MiniIconsYellow' },
-        CmdlineInput = { link = 'MiniIconsCyan' },
-        LspRenameInput = { link = 'MiniIconsPurple' },
+        CmdlineDefault = { link = 'LspDiagnosticsHint' },
+        CmdlineLua = { link = 'Function' },
+        CmdlineHelp = { link = 'String' },
+        CmdlineSearchUp = { link = 'Number' },
+        CmdlineSearchDown = { link = 'LspDiagnosticsWarning' },
+        CmdlineFilter = { link = 'LspDiagnosticsWarning' },
+        CmdlineInput = { link = 'LspDiagnosticsHint' },
+        LspRenameInput = { link = 'Keyword' },
         CmdlineHiddenCursor = {
             cterm = { nocombine = true },
             nocombine = true,
